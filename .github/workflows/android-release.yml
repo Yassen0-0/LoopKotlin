@@ -2,6 +2,8 @@ name: Android Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*.*.*"
 
@@ -9,8 +11,8 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    name: Build and publish APK
+  android:
+    name: Validate, build, and publish APK
     runs-on: ubuntu-latest
 
     steps:
@@ -26,30 +28,64 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: Extract tag name
-        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
+      - name: Validate Firebase Auth integration
+        run: |
+          test -f app/google-services.json
+          grep -R "com.google.gms.google-services" -n build.gradle.kts app/build.gradle.kts
+          grep -R "firebase-bom" -n app/build.gradle.kts
+          grep -R "firebase-auth" -n app/build.gradle.kts
+          grep -R "play-services-auth" -n app/build.gradle.kts
+          test -f app/src/main/java/com/loop/app/ui/auth/AuthRepository.kt
+          test -f app/src/main/java/com/loop/app/ui/auth/AuthScreens.kt
+          test -f app/src/main/java/com/loop/app/ui/auth/AuthViewModel.kt
+          grep -R "FirebaseAuth.getInstance" -n app/src/main/java/com/loop/app/ui/auth/AuthRepository.kt
+          grep -R "createUserWithEmailAndPassword" -n app/src/main/java/com/loop/app/ui/auth/AuthRepository.kt
+          grep -R "signInWithEmailAndPassword" -n app/src/main/java/com/loop/app/ui/auth/AuthRepository.kt
+          grep -R "GoogleAuthProvider" -n app/src/main/java/com/loop/app/ui/auth/AuthRepository.kt
+          grep -R "AuthGate" -n app/src/main/java/com/loop/app/MainActivity.kt
+          grep -R "LoopApp(userId" -n app/src/main/java/com/loop/app/MainActivity.kt
+
+      - name: Extract version name
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
+          else
+            echo "TAG_NAME=main-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          fi
 
       - name: Build debug APK
         run: ./gradlew assembleDebug
 
-      - name: Prepare release assets
+      - name: Prepare APK artifacts
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk "Loop-${TAG_NAME}-debug.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "Loop-${TAG_NAME}.apk"
           cp app/build/outputs/apk/debug/app-debug.apk "Loop-latest.apk"
-          ls -lh "Loop-${TAG_NAME}-debug.apk" "Loop-latest.apk"
+          ls -lh "Loop-${TAG_NAME}.apk" "Loop-latest.apk"
+
+      - name: Upload main build artifact
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Loop-main-apk
+          path: |
+            Loop-${{ env.TAG_NAME }}.apk
+            Loop-latest.apk
 
       - name: Create GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           name: "Loop APK ${{ env.TAG_NAME }}"
           generate_release_notes: true
           files: |
-            Loop-${{ env.TAG_NAME }}-debug.apk
+            Loop-${{ env.TAG_NAME }}.apk
             Loop-latest.apk
           body: |
             Automated Android APK build for ${{ env.TAG_NAME }}.
 
-            This release currently publishes a debug APK because production release signing is not configured yet.
+            v0.2.0 and newer require Firebase Authentication before the main app opens.
+
+            This workflow currently publishes a debug APK because production release signing is not configured yet.
             Configure release signing before treating APKs as production-ready public builds.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

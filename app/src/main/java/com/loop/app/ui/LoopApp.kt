@@ -37,6 +37,7 @@ import androidx.compose.material.icons.rounded.RateReview
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
+import androidx.compose.material.icons.rounded.Logout
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -99,10 +100,10 @@ private data class DeleteRequest(val kind: String, val id: String, val label: St
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoopApp() {
+fun LoopApp(userId: String, onLogout: () -> Unit) {
     val context = LocalContext.current
-    val store = remember { LoopLocalStore(context) }
-    val initial = remember { store.load() }
+    val store = remember(userId) { LoopLocalStore(context, userId) }
+    val initial = remember(userId) { store.load() }
     var appState by remember { mutableStateOf(initial.getOrDefault(AppState())) }
     var storageError by remember { mutableStateOf(initial.exceptionOrNull()?.message) }
     var routeStack by remember { mutableStateOf(listOf(Screen.Today)) }
@@ -213,6 +214,7 @@ fun LoopApp() {
                                         appState = resetState
                                         storageError = store.save(resetState).exceptionOrNull()?.message
                                     },
+                                    onLogout = onLogout,
                                 )
                             }
                         }
@@ -760,6 +762,7 @@ private fun SettingsScreen(
     onBack: () -> Unit,
     onUpdateSettings: (SettingsState) -> Unit,
     onResetData: () -> Unit,
+    onLogout: () -> Unit,
 ) {
     SecondaryScaffold(t.settings, onBack) {
         item {
@@ -812,7 +815,20 @@ private fun SettingsScreen(
             SurfaceCard {
                 Text(t.appInfo, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(Modifier.height(8.dp))
-                Text("Loop 1.0.0", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Loop 0.2.0", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        item {
+            SurfaceCard {
+                Text(t.account, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
+                Spacer(Modifier.height(8.dp))
+                Text(t.accountBody, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(12.dp))
+                Button(onClick = onLogout, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+                    Icon(Icons.Rounded.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.size(8.dp))
+                    Text(t.logout)
+                }
             }
         }
     }
@@ -1308,6 +1324,9 @@ private class LoopStrings(private val ar: Boolean) {
     val language = s("Language", "اللغة")
     val dataManagement = s("Data management", "إدارة البيانات")
     val resetData = s("Reset local data", "إعادة ضبط البيانات المحلية")
+    val account = s("Account", "الحساب")
+    val accountBody = s("Sign out to return to the login screen. Your local Loop data stays separated by Firebase account on this device.", "سجل الخروج للعودة إلى شاشة الدخول. بيانات Loop المحلية تبقى منفصلة حسب حساب Firebase على هذا الجهاز.")
+    val logout = s("Log out", "تسجيل الخروج")
     val appInfo = s("App info", "معلومات التطبيق")
     val storageProblem = s("Storage problem", "مشكلة في التخزين")
     val newTask = s("New task", "مهمة جديدة")

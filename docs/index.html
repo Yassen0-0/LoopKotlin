@@ -20,6 +20,7 @@
             Download Latest APK
           </a>
           <p class="version-note">Latest version from GitHub Releases. Android may ask you to allow installing apps from unknown sources.</p>
+          <p class="version-note strong">v0.2.0 adds required Firebase login. v0.1.0 was the older public APK without accounts.</p>
         </div>
       </section>
 
@@ -44,8 +45,8 @@
             <p>Capture reflections and useful context as you go.</p>
           </article>
           <article class="card">
-            <h3>Local-first build</h3>
-            <p>This APK currently uses the app state available in the Android project.</p>
+            <h3>Firebase account</h3>
+            <p>Email/password and Google sign-in are required before the app opens.</p>
           </article>
         </div>
       </section>
@@ -65,13 +66,14 @@
           <li>Tap Download Latest APK.</li>
           <li>Open the downloaded APK on your Android phone.</li>
           <li>If Android asks, allow installs from your browser or file manager.</li>
-          <li>Install Loop and open the app.</li>
+          <li>Install Loop, open the app, and sign in or create a Firebase account.</li>
         </ol>
       </section>
 
       <section class="section version" aria-labelledby="version">
         <h2 id="version">Version info</h2>
         <p>Public APKs are published from semantic version tags such as <code>v0.1.0</code>, <code>v0.2.0</code>, and <code>v1.0.0</code>. Each release keeps its own versioned APK and a latest-download asset named <code>Loop-latest.apk</code>.</p>
+        <p><code>v0.2.0</code> is the Firebase Authentication release. <code>v0.1.0</code> was a public APK without login.</p>
         <p class="warning">Current release pipeline builds a debug APK until production signing is configured.</p>
       </section>
     </main>

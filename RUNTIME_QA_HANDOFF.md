@@ -2,228 +2,184 @@
 
 ## Current Status
 
-Task 2 is BLOCKED.
+Firebase Auth release `v0.2.0` is build-ready but not runtime-verified or published.
 
-Build verification has passed and a debug APK is available, but runtime acceptance is still pending. This app must not be marked runtime-verified until it is installed and tested on a real Android device or a stable emulator.
+Do not create the `v0.2.0` tag or publish a GitHub Release until the app is installed and the auth gate is tested on a real Android device or a stable emulator.
 
-## Debug APK
+## Verified Locally
 
-APK path:
+- `app/google-services.json` exists.
+- Firebase project ID is `loop-f6424`.
+- Android package is `com.loop.app`.
+- `./gradlew clean build --stacktrace` completed successfully with JDK 17 and the workspace Gradle cache.
+- `./gradlew assembleDebug --stacktrace` completed successfully.
+- Debug APK metadata reports:
+  - `applicationId`: `com.loop.app`
+  - `versionCode`: `2`
+  - `versionName`: `0.2.0`
+- Lint report: `No issues found.`
+
+## APK Artifacts
+
+Debug APK:
 
 ```bash
 /home/yassen/Downloads/my space/figma/LoopKotlin/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Package:
+Current size: `18M`
+
+Unsigned release APK:
 
 ```bash
-com.loop.app
+/home/yassen/Downloads/my space/figma/LoopKotlin/app/build/outputs/apk/release/app-release-unsigned.apk
 ```
 
-Main activity:
+Current size: `12M`
+
+## Runtime Blocker
+
+No Android target is currently available.
+
+Observed:
 
 ```bash
-com.loop.app/.MainActivity
+adb devices
 ```
 
-## Physical Android Device Install Instructions
+Result:
 
-1. On the Android phone, enable Developer options.
-2. Enable USB debugging.
-3. Connect the phone to this machine with a USB cable.
-4. Accept the USB debugging prompt on the phone.
-5. From `/home/yassen/Downloads/my space/figma/LoopKotlin`, confirm the device is connected:
+```bash
+List of devices attached
+```
+
+The available AVD is `arete_api35`, but it failed to boot twice with emulator exit code `139`.
+
+## GitHub Blocker
+
+GitHub CLI is not authenticated.
+
+Observed:
+
+```bash
+gh auth status
+```
+
+Result:
+
+```bash
+The token in default is invalid.
+```
+
+Re-authenticate before pushing:
+
+```bash
+gh auth login -h github.com
+```
+
+## Required Runtime QA
+
+Run this on a real Android phone or a stable emulator.
+
+1. Confirm a device is connected:
 
 ```bash
 adb devices -l
 ```
 
-Expected result: one connected device shows `device`, not `offline` or `unauthorized`.
+Expected: one device shows `device`, not `offline` or `unauthorized`.
 
-6. Install the debug APK:
+2. Install the debug APK:
 
 ```bash
 adb install -r "/home/yassen/Downloads/my space/figma/LoopKotlin/app/build/outputs/apk/debug/app-debug.apk"
 ```
 
-7. Confirm Android can resolve the app activity:
-
-```bash
-adb shell cmd package resolve-activity --brief com.loop.app
-```
-
-Expected result includes:
-
-```bash
-com.loop.app/.MainActivity
-```
-
-8. Clear app data before first-launch testing:
+3. Clear app data:
 
 ```bash
 adb shell pm clear com.loop.app
 ```
 
-9. Launch the app:
+4. Launch:
 
 ```bash
 adb shell am start -n com.loop.app/.MainActivity
 ```
 
-10. Capture launch evidence:
+5. Verify unauthenticated state:
+
+- The first visible app screen must be Login/Signup.
+- The main Loop planner screens must not be visible before sign-in.
+- The screen must show Email, Password, Sign in, Create account, Continue with Google, and Forgot password controls.
+
+6. Verify Email/Password signup:
+
+- Create a new Firebase account with a test email and password.
+- After success, the app enters the main Loop app.
+- Force stop and relaunch; the signed-in session remains active.
+
+7. Verify logout:
+
+- Open Settings.
+- Tap Log out.
+- App returns to Login/Signup.
+- Force stop and relaunch; app still shows Login/Signup.
+
+8. Verify Email/Password login:
+
+- Sign in again with the same test account.
+- App enters the main Loop app.
+
+9. Verify password reset UI:
+
+- Log out.
+- Enter the test email.
+- Tap Forgot password.
+- A password reset success or Firebase error message is shown clearly.
+
+10. Verify Google Sign-In:
+
+- Tap Continue with Google.
+- Complete Google account selection.
+- App enters the main Loop app after Firebase accepts the credential.
+
+11. Verify UID-separated local storage:
+
+- Sign in as account A.
+- Create a visible task or habit.
+- Log out.
+- Sign in as account B.
+- Confirm account A's local task or habit is not visible.
+- Log out and sign back in as account A.
+- Confirm account A's data is still visible.
+
+12. Capture evidence:
 
 ```bash
-adb exec-out screencap -p > loop-today-launch.png
-adb logcat -d -t 500 > loop-launch-logcat.txt
+adb exec-out screencap -p > loop-auth-login.png
+adb logcat -d -t 500 > loop-auth-logcat.txt
 ```
 
-11. For persistence checks, force stop and relaunch:
+## Publish Only After Runtime QA Passes
+
+After runtime QA passes and GitHub CLI is authenticated:
 
 ```bash
-adb shell am force-stop com.loop.app
-adb shell am start -n com.loop.app/.MainActivity
+git add .github/workflows/android-release.yml README.md RUNTIME_QA_HANDOFF.md build.gradle.kts app/build.gradle.kts app/google-services.json app/src/main/java/com/loop/app/MainActivity.kt app/src/main/java/com/loop/app/ui/LoopApp.kt app/src/main/java/com/loop/app/ui/LoopLocalStore.kt app/src/main/java/com/loop/app/ui/auth docs/index.html docs/styles.css
+git commit -m "Add Firebase Auth release gate"
+git tag v0.2.0
+/usr/bin/git push origin main
+/usr/bin/git push origin v0.2.0
 ```
 
-## Manual QA Checklist
+Then verify:
 
-Use this checklist on a real Android device or a stable emulator. Record Pass, Fail, or Blocked for each item and attach screenshots or logcat evidence for failures.
+- GitHub Actions passes for `v0.2.0`.
+- Release `v0.2.0` exists.
+- Release assets include `Loop-v0.2.0.apk` and `Loop-latest.apk`.
+- Latest download URL downloads the new APK:
 
-### App Launch
-
-- Install succeeds with `adb install -r`.
-- Activity resolves with `adb shell cmd package resolve-activity --brief com.loop.app`.
-- App launches with `adb shell am start -n com.loop.app/.MainActivity`.
-- No immediate crash appears in logcat.
-- First screen is visible and interactive.
-
-### First-Launch Onboarding
-
-- After `adb shell pm clear com.loop.app`, app opens to first-launch setup.
-- Optional name field accepts input.
-- Skip works.
-- Start works.
-- No fake personal data appears for a new install.
-- After onboarding, relaunch does not show onboarding again.
-
-### Home / Today Screen
-
-- Today screen loads after onboarding.
-- Empty state is visible when no tasks or habits exist.
-- Quick add actions open the correct creation flows.
-- Today task count and habit count update after creating and toggling items.
-- Today content remains readable in portrait orientation.
-
-### Tasks CRUD
-
-- Create a task with title, optional details, and date.
-- Edit the task title/details/date.
-- Toggle task completion.
-- Cancel an edit and confirm original data remains unchanged.
-- Delete confirmation can be cancelled.
-- Delete confirmation removes the task.
-- Force stop and relaunch; saved tasks and toggles persist.
-
-### Habits CRUD
-
-- Create a habit.
-- Edit the habit title.
-- Toggle habit completion.
-- Cancel an edit and confirm original data remains unchanged.
-- Delete confirmation can be cancelled.
-- Delete confirmation removes the habit.
-- Force stop and relaunch; saved habits and toggles persist.
-
-### Goals CRUD
-
-- Create a goal with title, progress, target, and unit.
-- Edit goal fields.
-- Invalid target is rejected.
-- Cancel an edit and confirm original data remains unchanged.
-- Delete confirmation can be cancelled.
-- Delete confirmation removes the goal.
-- Force stop and relaunch; saved goals persist.
-
-### Journal CRUD
-
-- Create a journal entry with date and content.
-- Edit the entry date and content.
-- Blank content is rejected.
-- Cancel an edit and confirm original data remains unchanged.
-- Delete confirmation can be cancelled.
-- Delete confirmation removes the entry.
-- Force stop and relaunch; saved entries persist.
-
-### Reviews Saving
-
-- Open More, then Reviews.
-- Start review opens a visible review form.
-- Blank required review fields are rejected.
-- Save review with wins and next focus.
-- Saved review appears in Reviews.
-- Cancel a second review and confirm no extra review is saved.
-- Force stop and relaunch; saved review persists.
-
-### Settings Persistence
-
-- Open More, then Settings.
-- Change profile name.
-- Change theme to Light, Dark, and System.
-- Change language to Arabic and back to English.
-- Force stop and relaunch after each setting change.
-- Confirm selected settings persist after relaunch.
-- Reset local data clears user-created content.
-
-### Arabic / RTL
-
-- Switch language to Arabic from Settings.
-- Layout direction changes to RTL.
-- Main navigation, More list, forms, back controls, and calendar controls mirror correctly.
-- Arabic copy appears across Today, Tasks, Habits, Insights, More, Goals, Journal, Calendar, Deen, Search, Reviews, and Settings.
-- Directional icons point correctly in RTL.
-- No unintended English copy remains except product branding or technical values.
-
-### Dark Mode / Light Mode
-
-- Set theme to Light and inspect all main screens.
-- Set theme to Dark and inspect all main screens.
-- Set theme to System and confirm it follows device theme.
-- Text, buttons, cards, inputs, toggles, and dividers remain readable in both light and dark modes.
-- Theme choice persists after force stop and relaunch.
-
-### Navigation
-
-- Bottom navigation switches between Today, Tasks, Habits, Insights, and More.
-- More opens Goals, Journal, Calendar, Deen, Search, Reviews, and Settings.
-- Calendar previous/next day controls work.
-- Search can find task details, habits, journal entries, goals, and reviews.
-- No navigation route lands on a blank or wrong screen.
-
-### Back Behavior
-
-- Top back returns from each More sub-screen to More or the immediate prior route.
-- Android system back behaves consistently with top back.
-- Back from an open sheet asks for discard confirmation when there are unsaved changes.
-- Back/cancel from delete confirmation leaves data unchanged.
-- Repeated back presses do not crash the app.
-
-### 5-Minute No-Crash Usage Test
-
-- Start logcat capture before the test:
-
-```bash
-adb logcat -c
-adb logcat > loop-5-minute-test-logcat.txt
+```text
+https://github.com/Yassen0-0/LoopKotlin/releases/latest/download/Loop-latest.apk
 ```
-
-- Use the app continuously for at least 5 minutes.
-- Navigate through every main and More screen.
-- Create, edit, toggle, cancel, and delete at least one task and one habit.
-- Create and save one journal entry, one goal, and one review.
-- Change theme and language at least once.
-- Force stop and relaunch once during the test.
-- Confirm no crash dialog appears.
-- Stop logcat and inspect for fatal exceptions or process death.
-
-## Acceptance Rule
-
-Task 2 remains BLOCKED until the APK is installed and the checklist above passes on a real physical Android device or a stable emulator. Build success alone is not runtime acceptance.

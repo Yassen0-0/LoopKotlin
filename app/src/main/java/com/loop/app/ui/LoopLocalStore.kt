@@ -5,8 +5,11 @@ import androidx.core.content.edit
 import org.json.JSONArray
 import org.json.JSONObject
 
-class LoopLocalStore(context: Context) {
-    private val prefs = context.applicationContext.getSharedPreferences("loop_local_store", Context.MODE_PRIVATE)
+class LoopLocalStore(context: Context, userId: String) {
+    private val prefs = context.applicationContext.getSharedPreferences(
+        "loop_local_store_${userId.toSafeStoreName()}",
+        Context.MODE_PRIVATE,
+    )
 
     fun load(): Result<AppState> = runCatching {
         val raw = prefs.getString(KEY_STATE, null) ?: return@runCatching AppState()
@@ -169,5 +172,7 @@ class LoopLocalStore(context: Context) {
 
     private companion object {
         const val KEY_STATE = "state"
+
+        fun String.toSafeStoreName(): String = replace(Regex("[^A-Za-z0-9_.-]"), "_")
     }
 }
