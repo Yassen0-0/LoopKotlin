@@ -13,8 +13,20 @@ android {
         applicationId = "com.loop.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.2.1"
+    }
+
+    signingConfigs {
+        getByName("debug") {
+            val loopDebugKeystore = file("debug.keystore")
+            if (loopDebugKeystore.exists()) {
+                storeFile = loopDebugKeystore
+                storePassword = "android"
+                keyAlias = "loopdebug"
+                keyPassword = "android"
+            }
+        }
     }
 
     buildFeatures {

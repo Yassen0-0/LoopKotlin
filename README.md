@@ -14,7 +14,9 @@ https://github.com/Yassen0-0/LoopKotlin/releases/latest/download/Loop-latest.apk
 
 ## Current public version
 
-`v0.2.0` is the Firebase Authentication release. It requires a real Firebase account before the main Loop app opens.
+`v0.2.1` fixes Google Sign-In for the published APK by using a stable debug signing key registered in Firebase.
+
+`v0.2.0` is the first Firebase Authentication release. It requires a real Firebase account before the main Loop app opens, but its published debug APK used an unregistered CI debug signing certificate for Google Sign-In.
 
 `v0.1.0` was an earlier public APK without account login. Do not use it as the current public build.
 
@@ -26,10 +28,10 @@ To publish a new APK:
 
 ```bash
 git add .
-git commit -m "Prepare v0.2.0"
-git tag v0.2.0
+git commit -m "Prepare v0.2.1"
+git tag v0.2.1
 git push origin main
-git push origin v0.2.0
+git push origin v0.2.1
 ```
 
 GitHub Actions will then:
@@ -38,7 +40,7 @@ GitHub Actions will then:
 - verify Firebase Auth dependencies and auth screens exist
 - build the Android APK
 - create a GitHub Release
-- upload a versioned APK asset, for example `Loop-v0.2.0.apk`
+- upload a versioned APK asset, for example `Loop-v0.2.1.apk`
 - upload `Loop-latest.apk`
 - keep the GitHub Pages download button pointing to the latest release asset automatically
 
@@ -72,6 +74,7 @@ Use semantic version tags:
 
 - `v0.1.0`
 - `v0.2.0`
+- `v0.2.1`
 - `v0.3.0`
 - `v1.0.0`
 

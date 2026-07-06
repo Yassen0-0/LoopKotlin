@@ -2,9 +2,9 @@
 
 ## Current Status
 
-Firebase Auth release `v0.2.0` is build-ready but not runtime-verified or published.
+Firebase Auth hotfix release `v0.2.1` is build-ready but not runtime-verified.
 
-Do not create the `v0.2.0` tag or publish a GitHub Release until the app is installed and the auth gate is tested on a real Android device or a stable emulator.
+It fixes Google Sign-In status code `10` by signing debug APKs with a stable project keystore whose SHA-1 and SHA-256 fingerprints are registered in Firebase.
 
 ## Verified Locally
 
@@ -15,8 +15,11 @@ Do not create the `v0.2.0` tag or publish a GitHub Release until the app is inst
 - `./gradlew assembleDebug --stacktrace` completed successfully.
 - Debug APK metadata reports:
   - `applicationId`: `com.loop.app`
-  - `versionCode`: `2`
-  - `versionName`: `0.2.0`
+  - `versionCode`: `3`
+  - `versionName`: `0.2.1`
+- Debug APK signer certificate:
+  - SHA-1: `bc8e555a5da1bc78c01cffa794a004fd5edb510c`
+  - SHA-256: `eb258e31987ae035cc377971c230a439699b16c3a994fc1ec6f97849c2ca81a1`
 - Lint report: `No issues found.`
 
 ## APK Artifacts
@@ -167,17 +170,17 @@ After runtime QA passes and GitHub CLI is authenticated:
 
 ```bash
 git add .github/workflows/android-release.yml README.md RUNTIME_QA_HANDOFF.md build.gradle.kts app/build.gradle.kts app/google-services.json app/src/main/java/com/loop/app/MainActivity.kt app/src/main/java/com/loop/app/ui/LoopApp.kt app/src/main/java/com/loop/app/ui/LoopLocalStore.kt app/src/main/java/com/loop/app/ui/auth docs/index.html docs/styles.css
-git commit -m "Add Firebase Auth release gate"
-git tag v0.2.0
+git commit -m "Fix Google Sign-In signing"
+git tag v0.2.1
 /usr/bin/git push origin main
-/usr/bin/git push origin v0.2.0
+/usr/bin/git push origin v0.2.1
 ```
 
 Then verify:
 
-- GitHub Actions passes for `v0.2.0`.
-- Release `v0.2.0` exists.
-- Release assets include `Loop-v0.2.0.apk` and `Loop-latest.apk`.
+- GitHub Actions passes for `v0.2.1`.
+- Release `v0.2.1` exists.
+- Release assets include `Loop-v0.2.1.apk` and `Loop-latest.apk`.
 - Latest download URL downloads the new APK:
 
 ```text

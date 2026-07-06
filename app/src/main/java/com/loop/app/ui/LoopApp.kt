@@ -815,7 +815,7 @@ private fun SettingsScreen(
             SurfaceCard {
                 Text(t.appInfo, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(Modifier.height(8.dp))
-                Text("Loop 0.2.0", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Loop 0.2.1", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         item {
